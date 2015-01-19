@@ -44,7 +44,6 @@ char* getPrompt(){
     
     //change this to emalloc() from S265
     //give credit to Zastre
-    //test note - when this appears on linux.csc, delete it!
     char* result = (char*) malloc(sizeof(char) * (path_size + 10)); 
 
     if (!path){
