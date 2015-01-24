@@ -136,16 +136,19 @@ int main() {
 			parseInput(reply);
 
 			// 2. If "cd", then change directory by chdir()
+			if (strcmp(*stringtab.stringval, "cd") == 0){
+				printf("Input = %s\n", *stringtab.stringval);	
+			}else{
 			
-			// 3. Else, execute command by fork() and exec()
-			
-			if(fork() == 0){
-				execvp(*stringtab.stringval, stringtab.stringval);
-				perror("Error on execvp");
-				exit(1);
-				printf("Child process, post exec call.\n");	
-		        }else{
-				wait(&status);
+				// 3. Else, execute command by fork() and exec()
+				if(fork() == 0){
+					execvp(*stringtab.stringval, stringtab.stringval);
+					perror("Error on execvp");
+					exit(1);
+					printf("Child process, post exec call.\n");	
+		        	}else{
+					wait(&status);
+				}
 			}
 		}
 		reset_string_array();
