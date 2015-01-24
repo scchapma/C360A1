@@ -120,12 +120,13 @@ char* getPrompt(){
 
 
 int main() {
-	char* prompt = getPrompt();  
+	//char* prompt = getPrompt();  
         int bailout = 1; 
 	int status;
 	
 	while (bailout) {
 		// Get user input
+		char* prompt = getPrompt();
 		char *reply = readline(prompt);
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
@@ -143,9 +144,9 @@ int main() {
         			getcwd(cur,size);
         			printf("\nThe current working directory of cur: %s\n", cur);
 
-        			char *change = "~";
-        			if (*change == '~')
-                		change = "/home";
+        			char *change = "..";
+        			if (strcmp(change, "..") == 0)
+                			change = "..";
         			printf("\nNow, let's change the working directory.\n");
         			if (chdir(change)==0){  // Success
                 			getcwd(cur,size);
@@ -153,8 +154,7 @@ int main() {
         			}else{   //Failure
                 			getcwd(cur,size);
                 			printf("\nThe current working directory of cur: %s\n", cur);
-				}
-        			exit(1);	
+				}	
 			}else{
 			
 				// 3. Else, execute command by fork() and exec()
@@ -170,10 +170,10 @@ int main() {
 		}
 		reset_string_array();
 		free(reply);
+		free(prompt);
 	}
-	//add comment to test Makefile
 	printf("RSI:  Exiting normally.\n");
-	free(prompt);
+	//free(prompt);
 	return(0);
 }
 
