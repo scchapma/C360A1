@@ -137,7 +137,24 @@ int main() {
 
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
-				printf("Input = %s\n", *stringtab.stringval);	
+				printf("Input = %s\n", *stringtab.stringval);
+				int size = 100;
+        			char cur[size];
+        			getcwd(cur,size);
+        			printf("\nThe current working directory of cur: %s\n", cur);
+
+        			char *change = "~";
+        			if (*change == '~')
+                		change = "/home";
+        			printf("\nNow, let's change the working directory.\n");
+        			if (chdir(change)==0){  // Success
+                			getcwd(cur,size);
+                			printf("\nThe current working directory of cur: %s\n", cur);
+        			}else{   //Failure
+                			getcwd(cur,size);
+                			printf("\nThe current working directory of cur: %s\n", cur);
+				}
+        			exit(1);	
 			}else{
 			
 				// 3. Else, execute command by fork() and exec()
