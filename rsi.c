@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <unistd.h>
@@ -9,42 +10,101 @@
 #include <errno.h>
 #include <signal.h>
 
-/*	char* getPrompt()
-	Eetrieve current working directory (see getcwd())
-	if successful, returns complete prompt with absoluate path = "RSI: [cwd] >"
-*/
-int concat(char* str1, char* str2, char* str3, char* out){
-    if (!str1 || !str2 || !str3 || !out)
-	return -1;
 
-    while (*str1)
-        *out++ = *str1++;
-    while (*str2)
-        *out++ = *str2++;
-    while (*str3)
-        *out++ = *str3++;
-    *out = '\0';
-    return 0;
-} 
+/* Contents of file command-line argument */
+struct Stringtab{
+    int sval;
+    int max;
+    char **stringval;
+} stringtab;
+
+enum {FINIT = 1, FGROW = 2};
+
+
+/* -------------------------------------------------------------------------------------------
+** 		ACCESSORY FUNCTIONS
+** -------------------------------------------------------------------------------------------
+*/
+
+/* Dr. Zastre's code from class */
+char *string_duplicator(char *input) {
+    char *copy;
+    assert (input != NULL);
+    copy = (char *)malloc(sizeof(char) * strlen(input) + 1);
+    if (copy == NULL) {
+        fprintf(stderr, "error in string_duplicator");
+        exit(1);
+    }
+    strncpy(copy, input, strlen(input)+1);
+    return copy;
+}
+
+/* Dr. Zastre's code from SENG 265 */
+void *emalloc(size_t n){
+    void *p;
+    p = malloc(n);
+    if (p == NULL) {
+        fprintf(stderr, "malloc of %lu bytes failed", n);
+        exit(1);
+    }
+    return p;
+}
+
+	/* Amended version of Dr. Zastre's "addname" code from SENG 265 */
+	int addstring(char *newstring){
+	    char **fp;
+    
+	    if(stringtab.stringval == NULL){
+	        stringtab.stringval = (char **) emalloc(FINIT*sizeof(char *));
+	        stringtab.max = FINIT;
+	        stringtab.sval = 0;
+	    }else if(stringtab.sval >= stringtab.max){
+	        fp = (char **) realloc(stringtab.stringval, (FGROW*stringtab.max)*sizeof(char *));
+	        if(stringtab.stringval == NULL){
+	            return -1;
+	        }
+	        stringtab.max = FGROW*stringtab.max;
+	        stringtab.stringval = fp;
+	    }
+	    stringtab.stringval[stringtab.sval] = newstring;
+	    return stringtab.sval++;
+	}
+	
+	/* tokenize files command-line argument and store file strings in dynamic array */
+   	
+	int parseInput(char* input){
+	    char *separator = " \t";
+	    char *basic_token = strsep(&input, separator);
+	    char *token;
+    
+	    while (basic_token != NULL){
+		token = string_duplicator(basic_token);
+	        addstring(token);
+		basic_token = strsep(&input, separator);
+	    }
+	    addstring(NULL);	
+	    return 0;
+	}		
+
+int reset_string_array(){
+	stringtab.stringval = 0;
+        stringtab.max = 0;
+        stringtab.stringval = NULL;
+        free(stringtab.stringval);
+	return 0;
+}
 
 
 char* getPrompt(){
-	// Write Code Here
     char* buf = NULL;
     size_t size = 0;
-    char* path = getcwd(buf, size);
-    printf("Path: %s\n", path);
 
+    char* path = getcwd(buf, size);
     int path_size = strlen(path);
-    printf("Path_size: %d\n", path_size);
     
     char header[] = "RSI: ";
     char footer [] = " > ";
-    //char prompt2[strlen(header)*4 + strlen(path)*4 + strlen(footer)*4 + 4];
-    
-    //change this to emalloc() from S265
-    //give credit to Zastre
-    char* result = (char*) malloc(sizeof(char) * (path_size + 10)); 
+    char* result = (char*) emalloc(sizeof(char) * (path_size + 10)); 
 
     if (!path){
         printf("Error - could not find current working directory.\n");
@@ -53,40 +113,60 @@ char* getPrompt(){
         strncpy(result, header, strlen(header));
         strncat(result, path, strlen(path));
         strncat(result, footer, strlen(footer));
-	printf("Prompt: %s\n", result);
-        //char * reply = readline(result);
     }
     free(buf); 
     return result;
 }
 
-/*	main
-*/
+
 int main() {
 	char* prompt = getPrompt();  
-	printf("Prompt2: %s\n", prompt);
         int bailout = 1; 
+	int status;
 	
 	while (bailout) {
 		// Get user input
-	        char *reply = readline(prompt);
+		char *reply = readline(prompt);
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
 			bailout = 0;
 		} else { // Execute user command
-		
+		        
 			// 1. Parse the user input contained in reply
-			// (Hint: tokenize it by strtok, space as the delimiter)
+			// (Hint: tokenize it by strtok, space as the delimiter)			
+			//this function from c library for strsep()
+			/*
+			char **ap, *argv[10];
+			for (ap = argv; (*ap = strsep(&reply, " \t")) != NULL;)
+				if (**ap != '\0')
+					//printf("Token: %s\n", *ap);
+					if (++ap >= &argv[10])
+						break;
+			*/
 			
+			parseInput(reply);
+
 			// 2. If "cd", then change directory by chdir()
 			
 			// 3. Else, execute command by fork() and exec()
-			char* argv_execvp[] = {"-l", "/usr/bin",  NULL};
-			if(fork() == 0)
-				if(execvp("ls", argv_execvp)<0)
+			
+			if(fork() == 0){
+				//execvp(*argv, argv);
+				execvp(*stringtab.stringval, stringtab.stringval);
+				perror("Error on execvp");
+				exit(1);
+				/*if(execvp(argv[0], argv)<0){
 					perror("Err on execvp");
+					//need exit here?
+					exit(1);
+				}*/
+				printf("Child process, post exec call.\n");	
+		        }else{
+				wait(&status);
+			}
 		}
-        	free(reply);
+		reset_string_array();
+		free(reply);
 	}
 	printf("RSI:  Exiting normally.\n");
 	free(prompt);
