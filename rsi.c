@@ -133,17 +133,6 @@ int main() {
 		} else { // Execute user command
 		        
 			// 1. Parse the user input contained in reply
-			// (Hint: tokenize it by strtok, space as the delimiter)			
-			//this function from c library for strsep()
-			/*
-			char **ap, *argv[10];
-			for (ap = argv; (*ap = strsep(&reply, " \t")) != NULL;)
-				if (**ap != '\0')
-					//printf("Token: %s\n", *ap);
-					if (++ap >= &argv[10])
-						break;
-			*/
-			
 			parseInput(reply);
 
 			// 2. If "cd", then change directory by chdir()
@@ -151,15 +140,9 @@ int main() {
 			// 3. Else, execute command by fork() and exec()
 			
 			if(fork() == 0){
-				//execvp(*argv, argv);
 				execvp(*stringtab.stringval, stringtab.stringval);
 				perror("Error on execvp");
 				exit(1);
-				/*if(execvp(argv[0], argv)<0){
-					perror("Err on execvp");
-					//need exit here?
-					exit(1);
-				}*/
 				printf("Child process, post exec call.\n");	
 		        }else{
 				wait(&status);
@@ -168,6 +151,7 @@ int main() {
 		reset_string_array();
 		free(reply);
 	}
+	//add comment to test Makefile
 	printf("RSI:  Exiting normally.\n");
 	free(prompt);
 	return(0);

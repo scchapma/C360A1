@@ -1,8 +1,8 @@
 .phony all:
-all: sample inf args
+all: rsi inf args
 
-sample: sample.c
-	gcc sample.c -lreadline -lhistory -ltermcap -o sample
+rsi: rsi.c
+	gcc rsi.c -lreadline -lhistory -ltermcap -o rsi
 
 inf: inf.c
 	gcc inf.c -o inf
