@@ -86,15 +86,6 @@ void *emalloc(size_t n){
 	    return 0;
 	}		
 
-int reset_string_array(){
-	stringtab.stringval = 0;
-        stringtab.max = 0;
-        stringtab.stringval = NULL;
-        free(stringtab.stringval);
-	return 0;
-}
-
-
 char* getPrompt(){
     char* buf = NULL;
     size_t size = 0;
@@ -119,6 +110,35 @@ char* getPrompt(){
 }
 
 
+int parse_cd (char** args){
+	printf("Input = %s\n", *stringtab.stringval);
+        int size = 100;
+        char cur[size];
+        getcwd(cur,size);
+        printf("\nThe current working directory of cur: %s\n", cur);
+
+        char *change = "..";
+        if (strcmp(change, "..") == 0)
+        	change = "..";
+        printf("\nNow, let's change the working directory.\n");
+        if (chdir(change)==0){  // Success
+         	getcwd(cur,size);
+               	printf("\nThe current working directory of cur: %s\n", cur);
+   	}else{   //Failure
+              	getcwd(cur,size);
+             	printf("\nThe current working directory of cur: %s\n", cur);
+      	}		
+}
+
+int reset_string_array(){
+        stringtab.stringval = 0;
+        stringtab.max = 0;
+        stringtab.stringval = NULL;
+        free(stringtab.stringval);
+        return 0;
+}
+
+
 int main() {
 	//char* prompt = getPrompt();  
         int bailout = 1; 
@@ -138,6 +158,9 @@ int main() {
 
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
+				parse_cd(stringtab.stringval);
+				
+				/*
 				printf("Input = %s\n", *stringtab.stringval);
 				int size = 100;
         			char cur[size];
@@ -154,7 +177,8 @@ int main() {
         			}else{   //Failure
                 			getcwd(cur,size);
                 			printf("\nThe current working directory of cur: %s\n", cur);
-				}	
+				}
+				*/	
 			}else{
 			
 				// 3. Else, execute command by fork() and exec()
