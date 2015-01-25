@@ -111,39 +111,25 @@ char* getPrompt(){
 
 
 int parse_cd (char** args){
-	//printf("Input = %s\n", *args);
+
         int size = 100;
         char cur[size];
         getcwd(cur,size);
-        //printf("The current working directory of cur: %s\n", cur);
 
-        //confirm length of array <= 2
-	/*if(args[2] != NULL){
-		printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
-		return 0;
-	}*/
-	
 	char* new_directory;
-	//special cases: cd, cd ~, and cd ..
-	//if (strcmp(args[1], "~") == 0){
-	
+	//special case: cd (no argument)	
 	if (!args[1]) { 
 		new_directory = getenv("HOME");
-	} else if (strcmp(args[1], "~") == 0){
-        	new_directory = getenv("HOME");
+	//confirm length of array <= 2
 	} else if (args[2] != NULL){
                 printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
                 return 0;
-        } else {
+        //special case: cd ~
+	} else if (strcmp(args[1], "~") == 0){
+                new_directory = getenv("HOME");
+	} else {
 		new_directory =args[1];
 	}
-	
-	//confirm length of array <= 2
-        /*
-	if(args[2] != NULL){
-                printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
-                return 0;
-        }*/   
 	
         //printf("Now, let's change the working directory.\n");
         if (chdir(new_directory)==0){  // Success
