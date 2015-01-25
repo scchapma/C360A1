@@ -11,6 +11,10 @@
 #include <signal.h>
 
 
+typedef int bool;
+#define true 1
+#define false 0
+
 /* Contents of file command-line argument */
 struct Stringtab{
     int sval;
@@ -50,45 +54,51 @@ void *emalloc(size_t n){
     return p;
 }
 
-	/* Amended version of Dr. Zastre's "addname" code from SENG 265 */
-	int addstring(char *newstring){
-	    char **fp;
+/* Amended version of Dr. Zastre's "addname" code from SENG 265 */
+int addstring(char *newstring){
+	char **fp;
     
-	    if(stringtab.stringval == NULL){
-	        stringtab.stringval = (char **) emalloc(FINIT*sizeof(char *));
+	if(stringtab.stringval == NULL){
+	    	stringtab.stringval = (char **) emalloc(FINIT*sizeof(char *));
 	        stringtab.max = FINIT;
 	        stringtab.sval = 0;
-	    }else if(stringtab.sval >= stringtab.max){
+	}else if(stringtab.sval >= stringtab.max){
 	        fp = (char **) realloc(stringtab.stringval, (FGROW*stringtab.max)*sizeof(char *));
 	        if(stringtab.stringval == NULL){
-	            return -1;
+	            	return -1;
 	        }
 	        stringtab.max = FGROW*stringtab.max;
 	        stringtab.stringval = fp;
-	    }
-	    stringtab.stringval[stringtab.sval] = newstring;
-	    return stringtab.sval++;
+	}
+	stringtab.stringval[stringtab.sval] = newstring;
+	return stringtab.sval++;
 	}
 	
-	/* tokenize files command-line argument and store file strings in dynamic array */
+/* tokenize files command-line argument and store file strings in dynamic array */
    	
-	int parseInput(char* input, bool* background){
-	    char *separator = " \t";
-	    char *basic_token = strsep(&input, separator);
-	    char *token;
+int parseInput(char* input, bool* background_p){
+	char *separator = " \t";
+	char *basic_token = strsep(&input, separator);
+	char *token;
     
-	    while (basic_token != NULL){
+	while (basic_token != NULL){
 		token = string_duplicator(basic_token);
 	        addstring(token);
 		basic_token = strsep(&input, separator);
-	    }
-	    //check for ampersand
-	    if (strcmp(stringtab.stringval[stringtab -> sval], "&")){
-		*background = true;
-	    } 
-	    addstring(NULL);	
-	    return 0;
-	}		
+	}
+	//check for ampersand
+	printf("Check for &.\n");
+	printf("sval: %d.\n", stringtab.sval);
+	printf("a[sval]: %s\n", stringtab.stringval[stringtab.sval-1]);
+	if (strcmp(stringtab.stringval[stringtab.sval-1], "&")){
+		*background_p = true;
+	} else {
+		*background_p = false;
+	}
+	printf("post strcmp.\n");
+	addstring(NULL);	
+	return 0;
+}		
 
 char* getPrompt(){
     char* buf = NULL;
@@ -175,8 +185,9 @@ int main() {
 		} else { // Execute user command
 		        
 			// 1. Parse the user input contained in reply
-			bool* background = false 
-			parseInput(reply, background);
+			bool in_background = false; 
+			printf("In else loop.\n");
+			parseInput(reply, &in_background);
 
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
