@@ -72,7 +72,7 @@ void *emalloc(size_t n){
 	
 	/* tokenize files command-line argument and store file strings in dynamic array */
    	
-	int parseInput(char* input){
+	int parseInput(char* input, bool* background){
 	    char *separator = " \t";
 	    char *basic_token = strsep(&input, separator);
 	    char *token;
@@ -82,6 +82,10 @@ void *emalloc(size_t n){
 	        addstring(token);
 		basic_token = strsep(&input, separator);
 	    }
+	    //check for ampersand
+	    if (strcmp(stringtab.stringval[stringtab -> sval], "&")){
+		*background = true;
+	    } 
 	    addstring(NULL);	
 	    return 0;
 	}		
@@ -171,7 +175,8 @@ int main() {
 		} else { // Execute user command
 		        
 			// 1. Parse the user input contained in reply
-			parseInput(reply);
+			bool* background = false 
+			parseInput(reply, background);
 
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
