@@ -138,7 +138,19 @@ int parse_cd (char** args){
               	getcwd(cur,size);
 		printf("Error - could not locate directory \"%s\".\n", args[1]);
              	//printf("The current working directory of cur: %s\n", cur);
-      	}		
+      	}
+	return 0;		
+}
+
+int parse_pwd (){
+	char* directory = NULL;
+	int size = 100;
+        char cur[size];
+        
+	directory = getcwd(cur,size);
+	printf("%s\n", directory);
+	return 0;
+	
 }
 
 int reset_string_array(){
@@ -158,7 +170,7 @@ int main() {
 	while (bailout) {
 		// Get user input
 		char* prompt = getPrompt();
-		char *reply = readline(prompt);
+		char* reply = readline(prompt);
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
 			bailout = 0;
@@ -170,6 +182,8 @@ int main() {
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
 				parse_cd(stringtab.stringval);
+			} else if (strcmp(*stringtab.stringval, "pwd") == 0) {
+				parse_pwd();
 			} else {
 			
 				// 3. Else, execute command by fork() and exec()
