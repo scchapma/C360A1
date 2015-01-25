@@ -111,22 +111,48 @@ char* getPrompt(){
 
 
 int parse_cd (char** args){
-	printf("Input = %s\n", *stringtab.stringval);
+	//printf("Input = %s\n", *args);
         int size = 100;
         char cur[size];
         getcwd(cur,size);
-        printf("\nThe current working directory of cur: %s\n", cur);
+        //printf("The current working directory of cur: %s\n", cur);
 
-        char *change = "..";
-        if (strcmp(change, "..") == 0)
-        	change = "..";
-        printf("\nNow, let's change the working directory.\n");
-        if (chdir(change)==0){  // Success
+        //confirm length of array <= 2
+	/*if(args[2] != NULL){
+		printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
+		return 0;
+	}*/
+	
+	char* new_directory;
+	//special cases: cd, cd ~, and cd ..
+	//if (strcmp(args[1], "~") == 0){
+	
+	if (!args[1]) { 
+		new_directory = getenv("HOME");
+	} else if (strcmp(args[1], "~") == 0){
+        	new_directory = getenv("HOME");
+	} else if (args[2] != NULL){
+                printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
+                return 0;
+        } else {
+		new_directory =args[1];
+	}
+	
+	//confirm length of array <= 2
+        /*
+	if(args[2] != NULL){
+                printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
+                return 0;
+        }*/   
+	
+        //printf("Now, let's change the working directory.\n");
+        if (chdir(new_directory)==0){  // Success
          	getcwd(cur,size);
-               	printf("\nThe current working directory of cur: %s\n", cur);
+               	//printf("The current working directory of cur: %s\n", cur);
    	}else{   //Failure
               	getcwd(cur,size);
-             	printf("\nThe current working directory of cur: %s\n", cur);
+		printf("Error - could not locate directory \"%s\".\n", args[1]);
+             	//printf("The current working directory of cur: %s\n", cur);
       	}		
 }
 
@@ -159,35 +185,15 @@ int main() {
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
 				parse_cd(stringtab.stringval);
-				
-				/*
-				printf("Input = %s\n", *stringtab.stringval);
-				int size = 100;
-        			char cur[size];
-        			getcwd(cur,size);
-        			printf("\nThe current working directory of cur: %s\n", cur);
-
-        			char *change = "..";
-        			if (strcmp(change, "..") == 0)
-                			change = "..";
-        			printf("\nNow, let's change the working directory.\n");
-        			if (chdir(change)==0){  // Success
-                			getcwd(cur,size);
-                			printf("\nThe current working directory of cur: %s\n", cur);
-        			}else{   //Failure
-                			getcwd(cur,size);
-                			printf("\nThe current working directory of cur: %s\n", cur);
-				}
-				*/	
-			}else{
+			} else {
 			
 				// 3. Else, execute command by fork() and exec()
-				if(fork() == 0){
+				if (fork() == 0){
 					execvp(*stringtab.stringval, stringtab.stringval);
 					perror("Error on execvp");
 					exit(1);
 					printf("Child process, post exec call.\n");	
-		        	}else{
+		        	} else {
 					wait(&status);
 				}
 			}
