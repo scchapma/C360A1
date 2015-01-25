@@ -87,15 +87,17 @@ int parseInput(char* input, bool* background_p){
 		basic_token = strsep(&input, separator);
 	}
 	//check for ampersand
-	printf("Check for &.\n");
-	printf("sval: %d.\n", stringtab.sval);
-	printf("a[sval]: %s\n", stringtab.stringval[stringtab.sval-1]);
-	if (strcmp(stringtab.stringval[stringtab.sval-1], "&")){
+	//printf("Check for &.\n");
+	//printf("sval: %d.\n", stringtab.sval);
+	//printf("a[sval]: %s\n", stringtab.stringval[stringtab.sval-1]);
+	//if time, change to ternary operator
+	if (strcmp(stringtab.stringval[stringtab.sval-1], "&") == 0){
+		stringtab.stringval[stringtab.sval-1] = NULL;
 		*background_p = true;
 	} else {
 		*background_p = false;
 	}
-	printf("post strcmp.\n");
+	//printf("post strcmp.\n");
 	addstring(NULL);	
 	return 0;
 }		
@@ -176,9 +178,10 @@ int main() {
 	int status;
 	
 	while (bailout) {
-		// Get user input
+		/* Get user input */
 		char* prompt = getPrompt();
 		char* reply = readline(prompt);
+		
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
 			bailout = 0;
@@ -186,11 +189,16 @@ int main() {
 		        
 			// 1. Parse the user input contained in reply
 			bool in_background = false; 
-			printf("In else loop.\n");
-			parseInput(reply, &in_background);
-
+			//printf("In else loop.\n");
+			parseInput(reply, &in_background);	
+			
+			// check for null array
+			if (!*stringtab.stringval) {
+				printf("Error: Null array or singleton '&'.\n");
+				//continue;
+			
 			// 2. If "cd", then change directory by chdir()
-			if (strcmp(*stringtab.stringval, "cd") == 0){
+			}else if (strcmp(*stringtab.stringval, "cd") == 0){
 				parse_cd(stringtab.stringval);
 			// 3. if "pwd", return the current directory
 			} else if (strcmp(*stringtab.stringval, "pwd") == 0) {
@@ -208,6 +216,7 @@ int main() {
 				}
 			}
 		}
+		//may be better to move this to parseInput()
 		reset_string_array();
 		free(reply);
 		free(prompt);
