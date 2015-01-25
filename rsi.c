@@ -112,10 +112,6 @@ char* getPrompt(){
 
 int parse_cd (char** args){
 
-        int size = 100;
-        char cur[size];
-        getcwd(cur,size);
-
 	char* new_directory = NULL;
 
 	//special case: cd (no argument)	
@@ -133,13 +129,11 @@ int parse_cd (char** args){
 	}
 	
         if (chdir(new_directory)==0){  // Success
-         	getcwd(cur,size);
+         	return 0;
    	}else{   //Failure
-              	getcwd(cur,size);
 		printf("Error - could not locate directory \"%s\".\n", args[1]);
-             	//printf("The current working directory of cur: %s\n", cur);
-      	}
-	return 0;		
+             	return 1;
+      	}	
 }
 
 int parse_pwd (){
@@ -182,11 +176,12 @@ int main() {
 			// 2. If "cd", then change directory by chdir()
 			if (strcmp(*stringtab.stringval, "cd") == 0){
 				parse_cd(stringtab.stringval);
+			// 3. if "pwd", return the current directory
 			} else if (strcmp(*stringtab.stringval, "pwd") == 0) {
 				parse_pwd();
 			} else {
 			
-				// 3. Else, execute command by fork() and exec()
+				// 4. Else, execute command by fork() and exec()
 				if (fork() == 0){
 					execvp(*stringtab.stringval, stringtab.stringval);
 					perror("Error on execvp");
@@ -202,7 +197,6 @@ int main() {
 		free(prompt);
 	}
 	printf("RSI:  Exiting normally.\n");
-	//free(prompt);
 	return(0);
 }
 
