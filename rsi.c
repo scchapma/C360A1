@@ -171,11 +171,24 @@ int reset_string_array(){
         return 0;
 }
 
+int execute_command(char* argv, char** args){
+	int status;
+	if (fork() == 0){
+        	execvp(*stringtab.stringval, stringtab.stringval);
+        	perror("Error on execvp");
+       		exit(1);
+                printf("Child process, post exec call.\n");
+        } else {
+             	wait(&status);
+       	}
+	return 0;
+}
+
 
 int main() {
-	//char* prompt = getPrompt();  
+	  
         int bailout = 1; 
-	int status;
+	//int status;
 	
 	while (bailout) {
 		/* Get user input */
@@ -185,17 +198,16 @@ int main() {
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
 			bailout = 0;
-		} else { // Execute user command
+		
+		/* otherwise, execute user command*/
+		} else { 
 		        
 			// 1. Parse the user input contained in reply
-			bool in_background = false; 
-			//printf("In else loop.\n");
+			bool in_background;; 
 			parseInput(reply, &in_background);	
 			
-			// check for null array
 			if (!*stringtab.stringval) {
 				printf("Error: Null array or singleton '&'.\n");
-				//continue;
 			
 			// 2. If "cd", then change directory by chdir()
 			}else if (strcmp(*stringtab.stringval, "cd") == 0){
@@ -206,14 +218,15 @@ int main() {
 			} else {
 			
 				// 4. Else, execute command by fork() and exec()
-				if (fork() == 0){
+				execute_command(*stringtab.stringval, stringtab.stringval);
+				/*if (fork() == 0){
 					execvp(*stringtab.stringval, stringtab.stringval);
 					perror("Error on execvp");
 					exit(1);
 					printf("Child process, post exec call.\n");	
 		        	} else {
 					wait(&status);
-				}
+				}*/
 			}
 		}
 		//may be better to move this to parseInput()
