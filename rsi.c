@@ -116,7 +116,8 @@ int parse_cd (char** args){
         char cur[size];
         getcwd(cur,size);
 
-	char* new_directory;
+	char* new_directory = NULL;
+
 	//special case: cd (no argument)	
 	if (!args[1]) { 
 		new_directory = getenv("HOME");
@@ -131,10 +132,8 @@ int parse_cd (char** args){
 		new_directory =args[1];
 	}
 	
-        //printf("Now, let's change the working directory.\n");
         if (chdir(new_directory)==0){  // Success
          	getcwd(cur,size);
-               	//printf("The current working directory of cur: %s\n", cur);
    	}else{   //Failure
               	getcwd(cur,size);
 		printf("Error - could not locate directory \"%s\".\n", args[1]);
