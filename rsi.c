@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <signal.h>
 
-
 typedef int bool;
 #define true 1
 #define false 0
@@ -193,7 +192,7 @@ int execute_command(char* argc, char** args, bool* in_background){
              	//if in background
 		if (*in_background){
 			printf("Running in background.\n");
-			waitpid(cpid, &status, WUNTRACED | WCONTINUED);
+			waitpid(cpid, &status, WNOHANG);
 			//exit(0);
 		}else {
 			printf("Not running in background.\n");
@@ -239,17 +238,8 @@ int main() {
 			
 				// 4. Else, execute command by fork() and exec()
 				execute_command(*stringtab.stringval, stringtab.stringval, &in_background);
-				/*if (fork() == 0){
-					execvp(*stringtab.stringval, stringtab.stringval);
-					perror("Error on execvp");
-					exit(1);
-					printf("Child process, post exec call.\n");	
-		        	} else {
-					wait(&status);
-				}*/
 			}
 		}
-		//may be better to move this to parseInput()
 		reset_string_array();
 		free(reply);
 		free(prompt);
