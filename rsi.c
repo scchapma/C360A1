@@ -196,7 +196,7 @@ int execute_command(char* argc, char** args, bool* in_background){
         } else {
              	//if in background
 		if (*in_background){
-			do {
+			/*do {
                    		//w = waitpid(cpid, &status, WUNTRACED | WCONTINUED);
                    		w = waitpid(cpid, &status, WNOHANG);
 				if (w == -1) {
@@ -214,9 +214,10 @@ int execute_command(char* argc, char** args, bool* in_background){
                        			printf("continued\n");
                    		}
                		//} while (!WIFEXITED(status) && !WIFSIGNALED(status));
-			} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+			} while (!WIFEXITED(status) && !WIFSIGNALED(status));*/
 				//printf("Running in background.\n");
 				//waitpid(cpid, &status, WNOHANG);
+				wait(&status);
 				//exit(0);
 		}else {
 			//printf("Not running in background.\n");
