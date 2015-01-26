@@ -171,15 +171,35 @@ int reset_string_array(){
         return 0;
 }
 
-int execute_command(char* argv, char** args){
+int execute_command(char* argc, char** args, bool* in_background){
+	pid_t cpid, w;
 	int status;
-	if (fork() == 0){
-        	execvp(*stringtab.stringval, stringtab.stringval);
+
+	printf("Execute_command in_background: %d\n", *in_background);
+
+	cpid = fork();
+	if (cpid == -1) {
+		perror("fork");
+		exit(EXIT_FAILURE);
+	}
+
+	if (cpid == 0){
+        	printf("Child PID is %ld\n", (long) getpid());
+		execvp(*stringtab.stringval, stringtab.stringval);
         	perror("Error on execvp");
        		exit(1);
                 printf("Child process, post exec call.\n");
         } else {
-             	wait(&status);
+             	//if in background
+		if (*in_background){
+			printf("Running in background.\n");
+			waitpid(cpid, &status, WUNTRACED | WCONTINUED);
+			//exit(0);
+		}else {
+			printf("Not running in background.\n");
+			wait(&status);
+			//exit(0);
+		}
        	}
 	return 0;
 }
@@ -188,7 +208,7 @@ int execute_command(char* argv, char** args){
 int main() {
 	  
         int bailout = 1; 
-	//int status;
+	int status;
 	
 	while (bailout) {
 		/* Get user input */
@@ -218,7 +238,7 @@ int main() {
 			} else {
 			
 				// 4. Else, execute command by fork() and exec()
-				execute_command(*stringtab.stringval, stringtab.stringval);
+				execute_command(*stringtab.stringval, stringtab.stringval, &in_background);
 				/*if (fork() == 0){
 					execvp(*stringtab.stringval, stringtab.stringval);
 					perror("Error on execvp");
