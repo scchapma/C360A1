@@ -14,7 +14,7 @@ typedef int bool;
 #define true 1
 #define false 0
 
-/* Contents of file command-line argument */
+/* Contents of user input string */
 struct Stringtab{
     int sval;
     int max;
@@ -72,6 +72,11 @@ int addstring(char *newstring){
 	stringtab.stringval[stringtab.sval] = newstring;
 	return stringtab.sval++;
 	}
+
+/* -------------------------------------------------------------------------------------------
+**              MAIN FUNCTIONS
+** -------------------------------------------------------------------------------------------
+*/
 	
 /* tokenize files command-line argument and store file strings in dynamic array */
    	
@@ -174,7 +179,7 @@ int execute_command(char* argc, char** args, bool* in_background){
 	pid_t cpid, w;
 	int status;
 
-	printf("Execute_command in_background: %d\n", *in_background);
+	//printf("Execute_command in_background: %d\n", *in_background);
 
 	cpid = fork();
 	if (cpid == -1) {
@@ -183,7 +188,7 @@ int execute_command(char* argc, char** args, bool* in_background){
 	}
 
 	if (cpid == 0){
-        	printf("Child PID is %ld\n", (long) getpid());
+        	//printf("Child PID is %ld\n", (long) getpid());
 		execvp(*stringtab.stringval, stringtab.stringval);
         	perror("Error on execvp");
        		exit(1);
@@ -191,11 +196,30 @@ int execute_command(char* argc, char** args, bool* in_background){
         } else {
              	//if in background
 		if (*in_background){
-			printf("Running in background.\n");
-			waitpid(cpid, &status, WNOHANG);
-			//exit(0);
+			do {
+                   		//w = waitpid(cpid, &status, WUNTRACED | WCONTINUED);
+                   		w = waitpid(cpid, &status, WNOHANG);
+				if (w == -1) {
+                       			perror("waitpid");
+                       			exit(EXIT_FAILURE);
+                   		}
+
+                   		if (WIFEXITED(status)) {
+                       			printf("exited, status=%d\n", WEXITSTATUS(status));
+                   		} else if (WIFSIGNALED(status)) {
+                       			printf("killed by signal %d\n", WTERMSIG(status));
+                   		} else if (WIFSTOPPED(status)) {
+                       			printf("stopped by signal %d\n", WSTOPSIG(status));
+                   		} else if (WIFCONTINUED(status)) {
+                       			printf("continued\n");
+                   		}
+               		//} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+			} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+				//printf("Running in background.\n");
+				//waitpid(cpid, &status, WNOHANG);
+				//exit(0);
 		}else {
-			printf("Not running in background.\n");
+			//printf("Not running in background.\n");
 			wait(&status);
 			//exit(0);
 		}
