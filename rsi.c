@@ -28,7 +28,7 @@ enum {FINIT = 1, FGROW = 2};
 typedef struct BG_Job {
 	pid_t pid;
 	char *name;
-	char status;
+	int status;
 	struct BG_Job *next;
 } BG_Job;
 
@@ -89,7 +89,7 @@ int addstring(char *newstring){
 ** -------------------------------------------------------------------------------------------
 */
 
-//Node constructor
+/* Node constructor */
 BG_Job *newitem (pid_t pid, char *name, char status){
 	BG_Job *newp;
 	
@@ -101,18 +101,61 @@ BG_Job *newitem (pid_t pid, char *name, char status){
 	return newp;
 }
 
-//addFront
+/* Add new node to front of list */
 BG_Job *addfront (BG_Job *listp, BG_Job *newp){
 	newp->next = listp;
+	printf("New element added to list: pid #%d, name %s.\n", newp->pid, newp->name);
 	return newp;
 }
 
 
-//deleteItem
+/* Delete item with give pid */
+BG_Job *delitem (BG_Job *listp, pid_t pid){
+	BG_Job *p, *prev;
 
-//freeAll
+	prev = NULL;
+	for (p = listp; p != NULL; p = p-> next){
+		if (pid == p->pid){
+			if (prev == NULL){
+				listp = p->next;
+			}else{
+				prev->next = p->next;
+			}
+			free(p);
+			return listp;
+		}
+		prev = p;
+	}
+	fprintf(stderr, "delitem: %d not in list", pid);
+	exit(1);
+}
 
+/* Free memory for all remaining nodes in list */
+void freeall (BG_Job *listp) {
+	BG_Job *next;
 
+	for ( ; listp != NULL; listp = next){
+		next = listp->next;
+		free(listp);
+	}
+}
+
+void check_bg_list(BG_Job *listp){
+	int retVal;
+	
+	for ( ; listp != NULL; listp = listp->next){
+		int retVal = wait(&listp->status);
+		if (retVal == -1){
+			perror("waitpid"); 
+			exit(EXIT_FAILURE);
+		}
+		if(WIFEXITED(listp->status)){	
+			printf("Normal Exited, pid=%d, name=%s, status=%d\n", 
+				listp->pid, listp->name, WEXITSTATUS(listp->status));
+			delitem(bg_list, listp->pid);
+		}
+	}
+}
 
 /* -------------------------------------------------------------------------------------------
 **              MAIN FUNCTIONS
@@ -132,9 +175,6 @@ int parseInput(char* input, bool* background_p){
 		basic_token = strsep(&input, separator);
 	}
 	//check for ampersand
-	//printf("Check for &.\n");
-	//printf("sval: %d.\n", stringtab.sval);
-	//printf("a[sval]: %s\n", stringtab.stringval[stringtab.sval-1]);
 	//if time, change to ternary operator
 	if (strcmp(stringtab.stringval[stringtab.sval-1], "&") == 0){
 		stringtab.stringval[stringtab.sval-1] = NULL;
@@ -228,7 +268,6 @@ int execute_command(char* argc, char** args, bool* in_background){
 
 	if (cpid == 0){
         	//printf("Child PID is %ld\n", (long) getpid());
-		//if in background, add node to background_list
 		execvp(*stringtab.stringval, stringtab.stringval);
         	perror("Error on execvp");
        		exit(1);
@@ -236,7 +275,9 @@ int execute_command(char* argc, char** args, bool* in_background){
         } else {
 		sleep(1);
 		if (*in_background){
-			waitpid(cpid, &status, WNOHANG);
+			//if in background, add node to background_list
+			bg_list = addfront(bg_list, newitem(cpid, *stringtab.stringval, status));
+			//waitpid(cpid, &status, WNOHANG);
 			//wait(&status);
 			//exit(0);
 		}else {
@@ -261,7 +302,8 @@ int main() {
 
 		//add line to traverse in_background linked list
 		//if node (process) terminated, print message and delete node
-		
+		check_bg_list(bg_list);	
+	
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
 			bailout = 0;
@@ -292,6 +334,7 @@ int main() {
 		free(reply);
 		free(prompt);
 	}
+	freeall(bg_list);
 	printf("RSI:  Exiting normally.\n");
 	return(0);
 }
