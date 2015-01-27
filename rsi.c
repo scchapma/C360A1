@@ -214,10 +214,10 @@ int execute_command(char* argc, char** args, bool* in_background){
                        			printf("continued\n");
                    		}
                		//} while (!WIFEXITED(status) && !WIFSIGNALED(status));
-			} while (!WIFEXITED(status) && !WIFSIGNALED(status));*/
+			} while (!WIFEXITED(status) && !WIFSIGNALED(status)); */
 				//printf("Running in background.\n");
-				//waitpid(cpid, &status, WNOHANG);
-				wait(&status);
+				waitpid(cpid, &status, WNOHANG);
+				//wait(&status);
 				//exit(0);
 		}else {
 			//printf("Not running in background.\n");
@@ -238,6 +238,8 @@ int main() {
 		/* Get user input */
 		char* prompt = getPrompt();
 		char* reply = readline(prompt);
+
+		//add line to traverse in_background linked list
 		
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
