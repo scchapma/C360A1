@@ -23,6 +23,17 @@ struct Stringtab{
 
 enum {FINIT = 1, FGROW = 2};
 
+/* Node struct for list of background functions */
+
+typedef struct BG_Job {
+	pid_t pid;
+	char *name;
+	char status;
+	struct BG_Job *next;
+} BG_Job;
+
+/* Head for list of background functions */
+BG_Job *bg_list = NULL;
 
 /* -------------------------------------------------------------------------------------------
 ** 		ACCESSORY FUNCTIONS
@@ -72,6 +83,36 @@ int addstring(char *newstring){
 	stringtab.stringval[stringtab.sval] = newstring;
 	return stringtab.sval++;
 	}
+
+/* -------------------------------------------------------------------------------------------
+**              LINKED LIST FUNCTIONS
+** -------------------------------------------------------------------------------------------
+*/
+
+//Node constructor
+BG_Job *newitem (pid_t pid, char *name, char status){
+	BG_Job *newp;
+	
+	newp = (BG_Job *) emalloc(sizeof(BG_Job));
+	newp->pid = pid;
+	newp->name = name;
+	newp->status = status;
+	newp->next = NULL;
+	return newp;
+}
+
+//addFront
+BG_Job *addfront (BG_Job *listp, BG_Job *newp){
+	newp->next = listp;
+	return newp;
+}
+
+
+//deleteItem
+
+//freeAll
+
+
 
 /* -------------------------------------------------------------------------------------------
 **              MAIN FUNCTIONS
@@ -176,10 +217,8 @@ int reset_string_array(){
 }
 
 int execute_command(char* argc, char** args, bool* in_background){
-	pid_t cpid, w;
+	pid_t cpid;
 	int status;
-
-	//printf("Execute_command in_background: %d\n", *in_background);
 
 	cpid = fork();
 	if (cpid == -1) {
@@ -189,36 +228,17 @@ int execute_command(char* argc, char** args, bool* in_background){
 
 	if (cpid == 0){
         	//printf("Child PID is %ld\n", (long) getpid());
+		//if in background, add node to background_list
 		execvp(*stringtab.stringval, stringtab.stringval);
         	perror("Error on execvp");
        		exit(1);
                 printf("Child process, post exec call.\n");
         } else {
-             	//if in background
+		sleep(1);
 		if (*in_background){
-			/*do {
-                   		//w = waitpid(cpid, &status, WUNTRACED | WCONTINUED);
-                   		w = waitpid(cpid, &status, WNOHANG);
-				if (w == -1) {
-                       			perror("waitpid");
-                       			exit(EXIT_FAILURE);
-                   		}
-
-                   		if (WIFEXITED(status)) {
-                       			printf("exited, status=%d\n", WEXITSTATUS(status));
-                   		} else if (WIFSIGNALED(status)) {
-                       			printf("killed by signal %d\n", WTERMSIG(status));
-                   		} else if (WIFSTOPPED(status)) {
-                       			printf("stopped by signal %d\n", WSTOPSIG(status));
-                   		} else if (WIFCONTINUED(status)) {
-                       			printf("continued\n");
-                   		}
-               		//} while (!WIFEXITED(status) && !WIFSIGNALED(status));
-			} while (!WIFEXITED(status) && !WIFSIGNALED(status)); */
-				//printf("Running in background.\n");
-				waitpid(cpid, &status, WNOHANG);
-				//wait(&status);
-				//exit(0);
+			waitpid(cpid, &status, WNOHANG);
+			//wait(&status);
+			//exit(0);
 		}else {
 			//printf("Not running in background.\n");
 			wait(&status);
@@ -240,6 +260,7 @@ int main() {
 		char* reply = readline(prompt);
 
 		//add line to traverse in_background linked list
+		//if node (process) terminated, print message and delete node
 		
 		/* if user quits, exit loop */
 		if (!strcmp(reply, "quit")) {
