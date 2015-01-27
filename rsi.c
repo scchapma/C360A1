@@ -96,6 +96,7 @@ BG_Job *newitem (pid_t pid, char *name, char status){
 	newp = (BG_Job *) emalloc(sizeof(BG_Job));
 	newp->pid = pid;
 	newp->name = name;
+	printf("New node name: %s.\n", newp->name);
 	newp->status = status;
 	newp->next = NULL;
 	return newp;
@@ -110,6 +111,7 @@ BG_Job *addfront (BG_Job *listp, BG_Job *newp){
 
 
 /* Delete item with give pid */
+/*
 BG_Job *delitem (BG_Job *listp, pid_t pid){
 	BG_Job *p, *prev;
 
@@ -129,6 +131,27 @@ BG_Job *delitem (BG_Job *listp, pid_t pid){
 	fprintf(stderr, "delitem: %d not in list", pid);
 	exit(1);
 }
+*/
+
+BG_Job *delitem (BG_Job *listp, BG_Job *targetp){
+        BG_Job *p, *prev;
+
+        prev = NULL;
+        for (p = listp; p != NULL; p = p-> next){
+                if (p == targetp){
+                        if (prev == NULL){
+                                listp = p->next;
+                        }else{
+                                prev->next = p->next;
+                        }
+                        free(p);
+                        return listp;
+                }
+                prev = p;
+        }
+        fprintf(stderr, "delitem: %s not in list", targetp->name);
+        exit(1);
+}
 
 /* Free memory for all remaining nodes in list */
 void freeall (BG_Job *listp) {
@@ -144,15 +167,17 @@ void check_bg_list(BG_Job *listp){
 	int retVal;
 	
 	for ( ; listp != NULL; listp = listp->next){
-		int retVal = wait(&listp->status);
+		printf("Enter for loop: pid=%d, name=%s, status=%d\n", 
+                                listp->pid, listp->name, listp->status);
+		retVal = wait(&listp->status);
 		if (retVal == -1){
-			perror("waitpid"); 
-			exit(EXIT_FAILURE);
+			perror("wait"); 
+			//exit(EXIT_FAILURE);
 		}
 		if(WIFEXITED(listp->status)){	
 			printf("Normal Exited, pid=%d, name=%s, status=%d\n", 
 				listp->pid, listp->name, WEXITSTATUS(listp->status));
-			delitem(bg_list, listp->pid);
+			//delitem(bg_list, listp);
 		}
 	}
 }
@@ -268,15 +293,17 @@ int execute_command(char* argc, char** args, bool* in_background){
 
 	if (cpid == 0){
         	//printf("Child PID is %ld\n", (long) getpid());
-		execvp(*stringtab.stringval, stringtab.stringval);
-        	perror("Error on execvp");
+		//execvp(*stringtab.stringval, stringtab.stringval);
+        	execvp(argc, args);
+		perror("Error on execvp");
        		exit(1);
                 printf("Child process, post exec call.\n");
         } else {
 		sleep(1);
 		if (*in_background){
 			//if in background, add node to background_list
-			bg_list = addfront(bg_list, newitem(cpid, *stringtab.stringval, status));
+			//bg_list = addfront(bg_list, newitem(cpid, *stringtab.stringval, status));
+			bg_list = addfront(bg_list, newitem(cpid, argc, status));
 			//waitpid(cpid, &status, WNOHANG);
 			//wait(&status);
 			//exit(0);
