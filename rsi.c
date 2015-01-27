@@ -171,8 +171,9 @@ void check_bg_list(BG_Job *listp){
                                 listp->pid, listp->name, listp->status);
 		retVal = wait(&listp->status);
 		if (retVal == -1){
-			perror("wait"); 
+			//perror("wait"); 
 			//exit(EXIT_FAILURE);
+			continue;
 		}
 		if(WIFEXITED(listp->status)){	
 			printf("Normal Exited, pid=%d, name=%s, status=%d\n", 
