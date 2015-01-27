@@ -24,7 +24,6 @@ struct Stringtab{
 enum {FINIT = 1, FGROW = 2};
 
 /* Node struct for list of background functions */
-
 typedef struct BG_Job {
 	pid_t pid;
 	char *name;
@@ -133,6 +132,7 @@ BG_Job *delitem (BG_Job *listp, pid_t pid){
 }
 */
 
+/* Delete item at given pointer */
 BG_Job *delitem (BG_Job *listp, BG_Job *targetp){
         BG_Job *p, *prev;
 
@@ -163,22 +163,24 @@ void freeall (BG_Job *listp) {
 	}
 }
 
+/* Traverse list and delete nodes that have terminated*/
 void check_bg_list(BG_Job *listp){
-	int retVal;
+	//int retVal;
 	
 	for ( ; listp != NULL; listp = listp->next){
 		printf("Enter for loop: pid=%d, name=%s, status=%d\n", 
                                 listp->pid, listp->name, listp->status);
-		retVal = wait(&listp->status);
+		//retVal = wait(&listp->status);
+		int retVal = waitpid(listp->pid, &listp->status, WNOHANG);
+		printf("retVal: %d.\n", retVal);
 		if (retVal == -1){
-			perror("wait"); 
+			perror("waitpid"); 
 			exit(EXIT_FAILURE);
-			continue;
 		}
-		if(WIFEXITED(listp->status)){	
+		//if(WIFEXITED(listp->status)){
+		if(retVal > 0){	
 			printf("Normal Exited, pid=%d, name=%s, status=%d\n", 
 				listp->pid, listp->name, WEXITSTATUS(listp->status));
-			//delitem(bg_list, listp);
 			bg_list = delitem(bg_list, listp);
 		}
 	}
@@ -301,18 +303,13 @@ int execute_command(char* argc, char** args, bool* in_background){
        		exit(1);
                 printf("Child process, post exec call.\n");
         } else {
-		sleep(1);
+		//sleep(1);
 		if (*in_background){
 			//if in background, add node to background_list
-			//bg_list = addfront(bg_list, newitem(cpid, *stringtab.stringval, status));
 			bg_list = addfront(bg_list, newitem(cpid, argc, status));
-			//waitpid(cpid, &status, WNOHANG);
-			//wait(&status);
-			//exit(0);
 		}else {
 			//printf("Not running in background.\n");
-			wait(&status);
-			//exit(0);
+			waitpid(cpid, &status, 0);
 		}
        	}
 	return 0;
