@@ -171,14 +171,15 @@ void check_bg_list(BG_Job *listp){
                                 listp->pid, listp->name, listp->status);
 		retVal = wait(&listp->status);
 		if (retVal == -1){
-			//perror("wait"); 
-			//exit(EXIT_FAILURE);
+			perror("wait"); 
+			exit(EXIT_FAILURE);
 			continue;
 		}
 		if(WIFEXITED(listp->status)){	
 			printf("Normal Exited, pid=%d, name=%s, status=%d\n", 
 				listp->pid, listp->name, WEXITSTATUS(listp->status));
 			//delitem(bg_list, listp);
+			bg_list = delitem(bg_list, listp);
 		}
 	}
 }
