@@ -95,7 +95,7 @@ BG_Job *newitem (pid_t pid, char *name, char status){
 	newp = (BG_Job *) emalloc(sizeof(BG_Job));
 	newp->pid = pid;
 	newp->name = name;
-	printf("New node name: %s.\n", newp->name);
+	//printf("New node name: %s.\n", newp->name);
 	newp->status = status;
 	newp->next = NULL;
 	return newp;
@@ -104,33 +104,10 @@ BG_Job *newitem (pid_t pid, char *name, char status){
 /* Add new node to front of list */
 BG_Job *addfront (BG_Job *listp, BG_Job *newp){
 	newp->next = listp;
-	printf("New element added to list: pid #%d, name %s.\n", newp->pid, newp->name);
+	//printf("New element added to list: pid #%d, name %s.\n", newp->pid, newp->name);
 	return newp;
 }
 
-
-/* Delete item with give pid */
-/*
-BG_Job *delitem (BG_Job *listp, pid_t pid){
-	BG_Job *p, *prev;
-
-	prev = NULL;
-	for (p = listp; p != NULL; p = p-> next){
-		if (pid == p->pid){
-			if (prev == NULL){
-				listp = p->next;
-			}else{
-				prev->next = p->next;
-			}
-			free(p);
-			return listp;
-		}
-		prev = p;
-	}
-	fprintf(stderr, "delitem: %d not in list", pid);
-	exit(1);
-}
-*/
 
 /* Delete item at given pointer */
 BG_Job *delitem (BG_Job *listp, BG_Job *targetp){
@@ -165,14 +142,12 @@ void freeall (BG_Job *listp) {
 
 /* Traverse list and delete nodes that have terminated*/
 void check_bg_list(BG_Job *listp){
-	//int retVal;
 	
 	for ( ; listp != NULL; listp = listp->next){
-		printf("Enter for loop: pid=%d, name=%s, status=%d\n", 
-                                listp->pid, listp->name, listp->status);
-		//retVal = wait(&listp->status);
+		//printf("Enter for loop: pid=%d, name=%s, status=%d\n", 
+                //                listp->pid, listp->name, listp->status);
 		int retVal = waitpid(listp->pid, &listp->status, WNOHANG);
-		printf("retVal: %d.\n", retVal);
+		//printf("retVal: %d.\n", retVal);
 		if (retVal == -1){
 			perror("waitpid"); 
 			exit(EXIT_FAILURE);
@@ -211,7 +186,6 @@ int parseInput(char* input, bool* background_p){
 	} else {
 		*background_p = false;
 	}
-	//printf("post strcmp.\n");
 	addstring(NULL);	
 	return 0;
 }		
@@ -296,7 +270,7 @@ int execute_command(char* argc, char** args, bool* in_background){
 	}
 
 	if (cpid == 0){
-        	//printf("Child PID is %ld\n", (long) getpid());
+        	printf("Child PID is %ld\n", (long) getpid());
 		//execvp(*stringtab.stringval, stringtab.stringval);
         	execvp(argc, args);
 		perror("Error on execvp");
@@ -307,8 +281,7 @@ int execute_command(char* argc, char** args, bool* in_background){
 		if (*in_background){
 			//if in background, add node to background_list
 			bg_list = addfront(bg_list, newitem(cpid, argc, status));
-		}else {
-			//printf("Not running in background.\n");
+		}else {	
 			waitpid(cpid, &status, 0);
 		}
        	}
@@ -326,8 +299,7 @@ int main() {
 		char* prompt = getPrompt();
 		char* reply = readline(prompt);
 
-		//add line to traverse in_background linked list
-		//if node (process) terminated, print message and delete node
+		/* Traverse in_background linked list */
 		check_bg_list(bg_list);	
 	
 		/* if user quits, exit loop */
