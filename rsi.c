@@ -154,7 +154,7 @@ void check_bg_list(BG_Job *listp){
 		}
 		//if(WIFEXITED(listp->status)){
 		if(retVal > 0){	
-			printf("Normal Exited, pid=%d, name=%s, status=%d\n", 
+			printf("Background process terminated: pid=%d, command=%s.\n", 
 				listp->pid, listp->name, WEXITSTATUS(listp->status));
 			bg_list = delitem(bg_list, listp);
 		}
@@ -269,15 +269,13 @@ int execute_command(char* argc, char** args, bool* in_background){
 		exit(EXIT_FAILURE);
 	}
 
-	if (cpid == 0){
-        	printf("Child PID is %ld\n", (long) getpid());
-		//execvp(*stringtab.stringval, stringtab.stringval);
+	if (cpid == 0){ 
         	execvp(argc, args);
 		perror("Error on execvp");
        		exit(1);
                 printf("Child process, post exec call.\n");
         } else {
-		//sleep(1);
+		sleep(1);
 		if (*in_background){
 			//if in background, add node to background_list
 			bg_list = addfront(bg_list, newitem(cpid, argc, status));
