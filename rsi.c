@@ -318,13 +318,10 @@ int main() {
 		} else { 
 		        
 			//parse the user input contained in reply
-			bool in_background;; 
-			printf("Before parseInput.\n");
-			parseInput(reply, &in_background);
-			printf("After parseInput.\n");	
+			bool in_background;; 	
+			parseInput(reply, &in_background);	
 			
-			if (stringtab.sval == 0) {
-                                printf("stringval: %d\n", stringtab.sval);
+			if (stringtab.sval == 0) { 
                                 continue;
 
 			} else if (!*stringtab.stringval) {
@@ -346,7 +343,6 @@ int main() {
 		reset_string_array();
 		free(reply);
 		free(prompt);
-		printf("after free, stringval: %d\n", stringtab.sval);
 	}
 	freeall(bg_list);
 	printf("RSI:  Exiting normally.\n");
