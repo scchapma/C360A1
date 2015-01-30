@@ -154,7 +154,7 @@ void check_bg_list(BG_Job *listp){
 		}
 		//if(WIFEXITED(listp->status)){
 		if(retVal > 0){	
-			printf("Background process terminated: pid=%d, command=%s.\n", 
+			printf("Background process terminated - pid: %d, command: %s.\n", 
 				listp->pid, listp->name, WEXITSTATUS(listp->status));
 			bg_list = delitem(bg_list, listp);
 		}
@@ -167,19 +167,25 @@ void check_bg_list(BG_Job *listp){
 */
 	
 /* tokenize files command-line argument and store file strings in dynamic array */
-   	
 int parseInput(char* input, bool* background_p){
-	char *separator = " \t";
-	char *basic_token = strsep(&input, separator);
+	char *separator = " ";
+	//char *basic_token = strsep(&input, separator);
+	char *basic_token = strtok(input, separator);
 	char *token;
-    
+
 	while (basic_token != NULL){
 		token = string_duplicator(basic_token);
 	        addstring(token);
-		basic_token = strsep(&input, separator);
+		//basic_token = strsep(&input, separator);
+		basic_token = strtok(NULL, separator);
 	}
+	printf("After while loop.\n");
+	printf("sval: %d.\n", stringtab.sval);
+	if(stringtab.sval == 0){
+		return 0;
+	}
+	
 	//check for ampersand
-	//if time, change to ternary operator
 	if (strcmp(stringtab.stringval[stringtab.sval-1], "&") == 0){
 		stringtab.stringval[stringtab.sval-1] = NULL;
 		*background_p = true;
@@ -270,14 +276,15 @@ int execute_command(char* argc, char** args, bool* in_background){
 	}
 
 	if (cpid == 0){ 
-        	execvp(argc, args);
-		perror("Error on execvp");
-       		exit(1);
-                printf("Child process, post exec call.\n");
+        	if (execvp(argc, args) == -1){
+			printf("%s: Command not found.\n", argc);
+		}
+		//perror("Command not found.\n");
+		exit(1);
         } else {
-		sleep(1);
 		if (*in_background){
 			//if in background, add node to background_list
+			printf("Process running in background - pid: %d.\n", cpid);
 			bg_list = addfront(bg_list, newitem(cpid, argc, status));
 		}else {	
 			waitpid(cpid, &status, 0);
@@ -297,6 +304,9 @@ int main() {
 		char* prompt = getPrompt();
 		char* reply = readline(prompt);
 
+		/* Check if string length is 0 */
+		if ((int)strlen(reply) == 0){continue;}
+
 		/* Traverse in_background linked list */
 		check_bg_list(bg_list);	
 	
@@ -309,17 +319,29 @@ int main() {
 		        
 			// 1. Parse the user input contained in reply
 			bool in_background;; 
-			parseInput(reply, &in_background);	
+			printf("Before parseInput.\n");
+			parseInput(reply, &in_background);
+			printf("After parseInput.\n");	
 			
-			if (!*stringtab.stringval) {
+			if (stringtab.sval == 0) {
+                                printf("stringval: %d\n", stringtab.sval);
+                                continue;
+			} else if (!*stringtab.stringval) {
 				printf("Error: Null array or singleton '&'.\n");
 			
+			/*} else if (stringtab.sval == 0) {
+				printf("stringval: %d\n", stringtab.sval);
+				continue;
+			*/
+
 			// 2. If "cd", then change directory by chdir()
-			}else if (strcmp(*stringtab.stringval, "cd") == 0){
+			} else if (strcmp(*stringtab.stringval, "cd") == 0){
 				parse_cd(stringtab.stringval);
+			
 			// 3. if "pwd", return the current directory
 			} else if (strcmp(*stringtab.stringval, "pwd") == 0) {
 				parse_pwd();
+			
 			} else {
 			
 				// 4. Else, execute command by fork() and exec()
