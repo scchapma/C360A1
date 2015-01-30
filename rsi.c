@@ -34,12 +34,13 @@ typedef struct BG_Job {
 /* Head for list of background functions */
 BG_Job *bg_list = NULL;
 
+
 /* -------------------------------------------------------------------------------------------
 ** 		ACCESSORY FUNCTIONS
 ** -------------------------------------------------------------------------------------------
 */
 
-/* Dr. Zastre's code from class */
+/* Dr. Zastre's code from SENG 265 */
 char *string_duplicator(char *input) {
     char *copy;
     assert (input != NULL);
@@ -95,7 +96,6 @@ BG_Job *newitem (pid_t pid, char *name, char status){
 	newp = (BG_Job *) emalloc(sizeof(BG_Job));
 	newp->pid = pid;
 	newp->name = name;
-	//printf("New node name: %s.\n", newp->name);
 	newp->status = status;
 	newp->next = NULL;
 	return newp;
@@ -104,7 +104,6 @@ BG_Job *newitem (pid_t pid, char *name, char status){
 /* Add new node to front of list */
 BG_Job *addfront (BG_Job *listp, BG_Job *newp){
 	newp->next = listp;
-	//printf("New element added to list: pid #%d, name %s.\n", newp->pid, newp->name);
 	return newp;
 }
 
@@ -144,15 +143,11 @@ void freeall (BG_Job *listp) {
 void check_bg_list(BG_Job *listp){
 	
 	for ( ; listp != NULL; listp = listp->next){
-		//printf("Enter for loop: pid=%d, name=%s, status=%d\n", 
-                //                listp->pid, listp->name, listp->status);
 		int retVal = waitpid(listp->pid, &listp->status, WNOHANG);
-		//printf("retVal: %d.\n", retVal);
 		if (retVal == -1){
 			perror("waitpid"); 
 			exit(EXIT_FAILURE);
 		}
-		//if(WIFEXITED(listp->status)){
 		if(retVal > 0){	
 			printf("Background process terminated - pid: %d, command: %s.\n", 
 				listp->pid, listp->name, WEXITSTATUS(listp->status));
@@ -161,6 +156,7 @@ void check_bg_list(BG_Job *listp){
 	}
 }
 
+
 /* -------------------------------------------------------------------------------------------
 **              MAIN FUNCTIONS
 ** -------------------------------------------------------------------------------------------
@@ -168,20 +164,17 @@ void check_bg_list(BG_Job *listp){
 	
 /* tokenize files command-line argument and store file strings in dynamic array */
 int parseInput(char* input, bool* background_p){
-	printf("Enter parseInput - sval: %d\n", stringtab.sval);
+
 	char *separator = " ";
-	//char *basic_token = strsep(&input, separator);
 	char *basic_token = strtok(input, separator);
 	char *token;
 
 	while (basic_token != NULL){
 		token = string_duplicator(basic_token);
 	        addstring(token);
-		//basic_token = strsep(&input, separator);
 		basic_token = strtok(NULL, separator);
 	}
-	printf("After while loop.\n");
-	printf("sval: %d.\n", stringtab.sval);
+
 	if(stringtab.sval == 0){
 		return 0;
 	}
@@ -228,13 +221,16 @@ int parse_cd (char** args){
 	//special case: cd (no argument)	
 	if (!args[1]) { 
 		new_directory = getenv("HOME");
-	//confirm length of array <= 2
+	
+        //confirm length of array <= 2
 	} else if (args[2] != NULL){
                 printf("Format error.  Correct format is \"cd\" or \"cd arg1\".\n");
                 return 0;
-        //special case: cd ~
+        
+	//special case: cd ~
 	} else if (strcmp(args[1], "~") == 0){
                 new_directory = getenv("HOME");
+	
 	} else {
 		new_directory =args[1];
 	}
@@ -301,12 +297,15 @@ int main() {
 	int status;
 	
 	while (bailout) {
+		
 		/* Get user input */
 		char* prompt = getPrompt();
 		char* reply = readline(prompt);
 
 		/* Check if string length is 0 */
-		if ((int)strlen(reply) == 0){continue;}
+		if ((int)strlen(reply) == 0){
+			continue;
+		}
 
 		/* Traverse in_background linked list */
 		check_bg_list(bg_list);	
@@ -318,7 +317,7 @@ int main() {
 		/* otherwise, execute user command*/
 		} else { 
 		        
-			// 1. Parse the user input contained in reply
+			//parse the user input contained in reply
 			bool in_background;; 
 			printf("Before parseInput.\n");
 			parseInput(reply, &in_background);
@@ -331,17 +330,16 @@ int main() {
 			} else if (!*stringtab.stringval) {
 				printf("Error: Null array or singleton '&'.\n");
 
-			// 2. If "cd", then change directory by chdir()
+			//if "cd", then change directory by chdir()
 			} else if (strcmp(*stringtab.stringval, "cd") == 0){
 				parse_cd(stringtab.stringval);
 			
-			// 3. if "pwd", return the current directory
+			//if "pwd", return the current directory
 			} else if (strcmp(*stringtab.stringval, "pwd") == 0) {
 				parse_pwd();
 			
+			//else, execute command by fork() and exec()
 			} else {
-			
-				// 4. Else, execute command by fork() and exec()
 				execute_command(*stringtab.stringval, stringtab.stringval, &in_background);
 			}
 		}
