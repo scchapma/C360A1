@@ -168,6 +168,7 @@ void check_bg_list(BG_Job *listp){
 	
 /* tokenize files command-line argument and store file strings in dynamic array */
 int parseInput(char* input, bool* background_p){
+	printf("Enter parseInput - sval: %d\n", stringtab.sval);
 	char *separator = " ";
 	//char *basic_token = strsep(&input, separator);
 	char *basic_token = strtok(input, separator);
@@ -258,7 +259,7 @@ int parse_pwd (){
 }
 
 int reset_string_array(){
-        stringtab.stringval = 0;
+        stringtab.sval = 0;
         stringtab.max = 0;
         stringtab.stringval = NULL;
         free(stringtab.stringval);
@@ -326,13 +327,9 @@ int main() {
 			if (stringtab.sval == 0) {
                                 printf("stringval: %d\n", stringtab.sval);
                                 continue;
+
 			} else if (!*stringtab.stringval) {
 				printf("Error: Null array or singleton '&'.\n");
-			
-			/*} else if (stringtab.sval == 0) {
-				printf("stringval: %d\n", stringtab.sval);
-				continue;
-			*/
 
 			// 2. If "cd", then change directory by chdir()
 			} else if (strcmp(*stringtab.stringval, "cd") == 0){
@@ -351,6 +348,7 @@ int main() {
 		reset_string_array();
 		free(reply);
 		free(prompt);
+		printf("after free, stringval: %d\n", stringtab.sval);
 	}
 	freeall(bg_list);
 	printf("RSI:  Exiting normally.\n");
