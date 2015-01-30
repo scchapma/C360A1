@@ -243,11 +243,17 @@ int parse_cd (char** args){
       	}	
 }
 
-int parse_pwd (){
+int parse_pwd (char** args){
 	char* directory = NULL;
 	int size = 100;
         char cur[size];
-        
+
+	//confirm length of array == 1
+        if (args[1] != NULL){
+                printf("Format error.  Correct format is \"pwd\" with no additional arguments.\n");
+                return 0;
+        }
+
 	directory = getcwd(cur,size);
 	printf("%s\n", directory);
 	return 0;
@@ -333,7 +339,7 @@ int main() {
 			
 			//if "pwd", return the current directory
 			} else if (strcmp(*stringtab.stringval, "pwd") == 0) {
-				parse_pwd();
+				parse_pwd(stringtab.stringval);
 			
 			//else, execute command by fork() and exec()
 			} else {
